@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>המשחקים של חגית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&display=swap">
+<style>
+:root{color-scheme:light;--sea:#27aee6;--sea2:#1784c4;--out:#2a1b3d;--paper:#fff4d8;--gold:#ffcc29}
+*{box-sizing:border-box}
+body{margin:0;font-family:Rubik,system-ui,sans-serif;background:linear-gradient(#27aee6,#1784c4);min-height:100vh;color:var(--out)}
+header{text-align:center;padding:36px 16px 12px;color:#fff}
+h1{margin:0;font-size:clamp(28px,7vw,44px);font-weight:900;text-shadow:0 3px 0 var(--out)}
+header p{margin:8px 0 0;font-size:18px;font-weight:500}
+main{max-width:900px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+a.card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:22px 16px;background:var(--paper);border:4px solid var(--out);border-radius:22px;box-shadow:0 6px 0 var(--out);text-decoration:none;color:inherit;transition:transform .12s}
+a.card:hover{transform:translateY(-3px)}
+a.card:active{transform:translateY(3px);box-shadow:0 2px 0 var(--out)}
+.pic{width:96px;height:96px;border-radius:22px;border:3px solid var(--out);display:grid;place-items:center;font-size:54px;background:#fff;overflow:hidden}
+.pic img{width:100%;height:100%;object-fit:cover}
+.card h2{margin:0;font-size:22px;font-weight:900}
+.card p{margin:0;font-size:16px;line-height:1.4}
+.go{margin-top:auto;background:var(--gold);border:3px solid var(--out);border-radius:999px;padding:8px 22px;font-weight:900;font-size:18px}
+footer{text-align:center;color:#fff;padding:24px 16px 32px;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎮 המשחקים שלנו</h1>
+  <p>בוחרים משחק ומתחילים לשחק</p>
+</header>
+<main>
+  <a class="card" href="body-quest/">
+    <div class="pic"><img src="body-quest/icon-192.png" alt=""></div>
+    <h2>Body Quest – אי התעלומות</h2>
+    <p>מסע במפת אי, אוספים מפתחות ומוצאים את האוצר. אפשר להתקין בטלפון.</p>
+    <span class="go">לשחק ▶</span>
+  </a>
+  <a class="card" href="detectives-quest/">
+    <div class="pic">🕵️</div>
+    <h2>מסע בלשי הגוף</h2>
+    <p>5 תחנות, נקודות, תגים ופרסים.</p>
+    <span class="go">לשחק ▶</span>
+  </a>
+  <a class="card" href="detectives/">
+    <div class="pic">🔍</div>
+    <h2>בלשי הגוף</h2>
+    <p>משחק כיתתי: גוף, רגש, או גם וגם?</p>
+    <span class="go">לשחק ▶</span>
+  </a>
+</main>
+<footer>משחקים על תחושות גוף ורגשות</footer>
+</body>
+</html>

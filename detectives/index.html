@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>בלשי הגוף</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Suez+One&family=Assistant:wght@400;600;800&display=swap">
+<style>
+/* Layout: one big "case file" card in the center, body map beside it, scoreboard on top. Projector-first, stacks on phones. */
+:root{
+  --bg:#eef4f7; --paper:#ffffff; --ink:#1d2a44; --muted:#5b6b85; --line:#d3dde6;
+  --body:#0f9b8e; --body-soft:#d4f2ee;
+  --emo:#e8546b; --emo-soft:#fde0e5;
+  --both:#7b5cd6; --both-soft:#e9e2fb;
+  --sun:#ffc23d; --skin:#ffd9b8; --skin-line:#c99a74;
+  --display:"Suez One","Assistant",Arial,sans-serif;
+  --text:"Assistant",Arial,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121a2b; --paper:#1b2640; --ink:#eef2fa; --muted:#a6b3cc; --line:#2d3b5c;
+  --body:#2cc7b7; --body-soft:#163c43; --emo:#ff7186; --emo-soft:#47202e;
+  --both:#a58bff; --both-soft:#2d2652; --sun:#ffcf5c; --skin:#e8b993; --skin-line:#9c7254;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121a2b; --paper:#1b2640; --ink:#eef2fa; --muted:#a6b3cc; --line:#2d3b5c;
+  --body:#2cc7b7; --body-soft:#163c43; --emo:#ff7186; --emo-soft:#47202e;
+  --both:#a58bff; --both-soft:#2d2652; --sun:#ffcf5c; --skin:#e8b993; --skin-line:#9c7254;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--text);font-size:18px;line-height:1.5;direction:rtl;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+.wrap{max-width:1050px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;line-height:1.2}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.screen[hidden]{display:none!important}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:1.7rem}
+.badge{width:44px;height:44px;border-radius:50%;background:var(--sun);display:grid;place-items:center}
+.scores{display:flex;gap:10px;flex-wrap:wrap}
+.score{background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:6px 14px;display:flex;gap:8px;align-items:baseline;font-weight:800}
+.score.active{border-color:var(--sun);box-shadow:0 0 0 3px color-mix(in srgb,var(--sun) 35%,transparent)}
+.score b{font-family:var(--display);font-size:1.5rem;font-weight:400;font-variant-numeric:tabular-nums}
+.progress{font-weight:600;color:var(--muted)}
+
+/* start */
+.hero{background:var(--paper);border-radius:24px;padding:28px;display:grid;grid-template-columns:1fr 220px;gap:24px;align-items:center;border:2px solid var(--line)}
+.hero h2{font-size:clamp(2rem,5vw,3.2rem)}
+.hero p{max-width:60ch;margin:10px 0 0}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.chip{border-radius:999px;padding:4px 14px;font-weight:800}
+.chip.body{background:var(--body-soft);color:var(--body)}
+.chip.emo{background:var(--emo-soft);color:var(--emo)}
+.chip.both{background:var(--both-soft);color:var(--both)}
+.modes{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+.big{background:var(--ink);color:var(--bg);border-radius:16px;padding:14px 26px;font-weight:800;font-size:1.15rem}
+.big.alt{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.big:hover{transform:translateY(-2px)}
+.howto{background:var(--paper);border-radius:20px;padding:20px 24px;border:2px dashed var(--line)}
+.howto ol{margin:8px 0 0;padding-inline-start:22px;display:grid;gap:4px}
+
+/* game */
+.stage{display:grid;grid-template-columns:240px 1fr;gap:18px;align-items:start}
+.mapbox{background:var(--paper);border-radius:22px;padding:14px;border:2px solid var(--line);text-align:center}
+.mapbox svg{width:100%;max-width:200px;height:auto}
+.maplabel{font-family:var(--display);font-size:1.3rem;color:var(--emo)}
+.card{background:var(--paper);border-radius:24px;padding:26px;border:2px solid var(--line);display:flex;flex-direction:column;gap:16px;min-width:0}
+.who{display:flex;align-items:center;gap:12px}
+.avatar{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.6rem;color:#fff;flex:none}
+.who small{color:var(--muted);font-weight:600;display:block}
+.sensation{font-family:var(--display);font-size:clamp(1.6rem,3.6vw,2.4rem);color:var(--ink)}
+.story{font-size:1.2rem;margin:0}
+.ask{font-weight:800;font-size:1.2rem}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.choice{border-radius:18px;padding:16px 10px;font-weight:800;font-size:1.2rem;border:3px solid transparent;display:flex;flex-direction:column;align-items:center;gap:4px}
+.choice span{font-weight:600;font-size:.9rem;opacity:.85}
+.choice.body{background:var(--body-soft);color:var(--body)}
+.choice.emo{background:var(--emo-soft);color:var(--emo)}
+.choice.both{background:var(--both-soft);color:var(--both)}
+.choice:hover:not(:disabled){transform:translateY(-3px)}
+.choice:disabled{cursor:default;opacity:.45}
+.choice.right{opacity:1;border-color:currentColor;transform:scale(1.04)}
+.choice.picked{opacity:1;outline:3px dashed var(--muted);outline-offset:2px}
+
+.reveal{border-radius:18px;padding:18px 20px;display:grid;gap:12px;animation:pop .35s ease}
+.reveal.body{background:var(--body-soft)} .reveal.emo{background:var(--emo-soft)} .reveal.both{background:var(--both-soft)}
+.verdict{font-family:var(--display);font-size:1.5rem}
+.reveal p{margin:0}
+.tip{background:var(--paper);border-radius:14px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start}
+.tip .ic{flex:none;width:34px;height:34px;border-radius:50%;background:var(--sun);display:grid;place-items:center;font-weight:800;color:#1d2a44}
+.tip b{display:block}
+.think{font-weight:600;color:var(--muted);font-size:1rem}
+.nextrow{display:flex;justify-content:flex-start}
+@keyframes pop{from{transform:scale(.96);opacity:.4}to{transform:none;opacity:1}}
+@keyframes pulse{0%,100%{r:22;opacity:.55}50%{r:30;opacity:.25}}
+.glow{fill:var(--emo);animation:pulse 1.4s ease-in-out infinite}
+
+/* end */
+.end{background:var(--paper);border-radius:24px;padding:28px;border:2px solid var(--line);display:grid;gap:18px}
+.end h2{font-size:clamp(2rem,5vw,3rem)}
+.questions{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.q{border-radius:16px;padding:14px;background:var(--bg);font-weight:800;font-size:1.1rem}
+.q small{display:block;font-weight:600;color:var(--muted);font-size:.9rem}
+.safety{border-inline-start:6px solid var(--sun);padding:8px 14px;background:var(--bg);border-radius:8px}
+
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr} .hero svg{max-width:150px;margin:0 auto}
+  .stage{grid-template-columns:1fr}
+  .mapbox{display:flex;align-items:center;gap:12px;text-align:start} .mapbox svg{max-width:90px}
+  .choices{grid-template-columns:1fr}
+  .questions{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="badge" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1d2a44" stroke-width="2.6" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M15 15l6 6"/></svg>
+      </div>
+      <h1>בלשי הגוף</h1>
+    </div>
+    <div class="scores" id="scores" hidden></div>
+    <div class="progress" id="progress"></div>
+  </header>
+
+  <!-- START -->
+  <section class="screen" id="start">
+    <div class="hero">
+      <div>
+        <h2>הגוף שלנו שולח הודעות. בואו נפענח אותן!</h2>
+        <p>לפעמים כואבת לנו הבטן כי אכלנו משהו לא טוב, ולפעמים היא כואבת כי אנחנו לחוצים לפני מבחן. אותה תחושה, סיבה אחרת. בכל קלף תפגשו ילד או ילדה עם תחושה בגוף, ותצטרכו לגלות מה הגוף מנסה להגיד.</p>
+        <div class="legend">
+          <span class="chip body">גוף: אוכל, שינה, מאמץ, מחלה</span>
+          <span class="chip emo">רגש: לחץ, פחד, כעס, עצב, התרגשות</span>
+          <span class="chip both">גם וגם</span>
+        </div>
+        <div class="modes">
+          <button class="big" id="playSolo">משחק כיתתי</button>
+          <button class="big alt" id="playTeams">שתי קבוצות</button>
+        </div>
+      </div>
+      <svg viewBox="0 0 200 360" aria-hidden="true" id="heroBody"></svg>
+    </div>
+    <div class="howto">
+      <h3>איך משחקים?</h3>
+      <ol>
+        <li>קוראים יחד את הקלף בקול.</li>
+        <li>מתייעצים: הגוף מסמן משהו גופני, רגשי, או גם וגם?</li>
+        <li>בוחרים תשובה ומגלים את ההסבר ומה אפשר לעשות.</li>
+        <li>תשובה נכונה שווה 10 נקודות. במשחק קבוצות התור עובר בכל קלף.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section class="screen" id="game" hidden>
+    <div class="stage">
+      <div class="mapbox">
+        <svg viewBox="0 0 200 360" id="bodyMap" aria-hidden="true"></svg>
+        <div><div class="maplabel" id="mapLabel"></div><div class="think">איפה זה מרגיש בגוף</div></div>
+      </div>
+      <article class="card" id="card">
+        <div class="who">
+          <div class="avatar" id="avatar"></div>
+          <div><strong id="name"></strong><small id="turn"></small></div>
+        </div>
+        <div class="sensation" id="sensation"></div>
+        <p class="story" id="story"></p>
+        <div class="ask">מה הגוף מנסה לסמן?</div>
+        <div class="choices">
+          <button class="choice body" data-a="body">גוף<span>משהו פיזי</span></button>
+          <button class="choice emo" data-a="emo">רגש<span>משהו שאני מרגיש/ה</span></button>
+          <button class="choice both" data-a="both">גם וגם<span>שניהם ביחד</span></button>
+        </div>
+        <div id="reveal" hidden></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- END -->
+  <section class="screen" id="end" hidden>
+    <div class="end">
+      <h2 id="endTitle">כל הכבוד, בלשים!</h2>
+      <p id="endScore" style="margin:0;font-size:1.2rem;font-weight:600"></p>
+      <h3>ארבע שאלות של בלש גוף</h3>
+      <div class="questions">
+        <div class="q">מה אני מרגיש/ה בגוף?<small>איפה? כמה חזק?</small></div>
+        <div class="q">מה קרה לפני?<small>אכלתי? ישנתי? רצתי?</small></div>
+        <div class="q">מה אני מרגיש/ה?<small>לחץ, פחד, כעס, עצב, שמחה</small></div>
+        <div class="q">מה אני חושב/ת?<small>מה עובר לי בראש עכשיו</small></div>
+      </div>
+      <p class="safety">תחושה בגוף היא לא "רעה". היא הודעה. כשתחושה חזקה מאוד, חוזרת הרבה או לא עוברת, מספרים להורה, למורה או ליועצת.</p>
+      <div class="modes"><button class="big" id="again">לשחק שוב עם קלפים אחרים</button></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const CARDS = [
+ {n:"נועה",c:"#e8546b",s:"בחילה",zone:"stomach",t:"בבוקר של מבחן גדול במתמטיקה, נועה יושבת ליד השולחן ופתאום מרגישה בחילה. אתמול בערב היא אכלה ארוחה רגילה וישנה טוב.",a:"emo",
+  why:"אכלה רגיל, ישנה טוב, אבל יש מבחן. לחץ מפעיל את מערכת האזעקה של הגוף, והבטן מאוד רגישה לזה. לכן אומרים שיש \"מוח שני\" בבטן.",
+  tip:"נשימת בלון: לשאוף לאט מהאף ולמלא את הבטן כמו בלון, לנשוף לאט מהפה. 5 פעמים.",think:"אולי נועה חושבת: \"אני בטח אכשל\". מה עוד היא יכולה להגיד לעצמה?"},
+ {n:"איתי",c:"#0f9b8e",s:"בחילה",zone:"stomach",t:"איתי אכל בהפסקה כריך עם טונה שנשאר כל הבוקר בתיק, בשמש. אחרי חצי שעה הבטן מתהפכת לו.",a:"body",
+  why:"זו אותה תחושה כמו של נועה, אבל הסיבה אחרת! אוכל שלא נשמר בקירור יכול לקלקל את הבטן. הגוף מסמן: \"משהו שאכלתי לא בסדר\".",
+  tip:"לספר למבוגר, לשתות מים בלגימות קטנות ולנוח. אם לא עובר, צריך עזרה.",think:"רואים? אותה בחילה, שתי סיבות שונות. בגלל זה צריך להיות בלש."},
+ {n:"דניאל",c:"#0f9b8e",s:"הלב דופק מהר",zone:"chest",t:"דניאל רץ חמישה סיבובים מסביב למגרש בשיעור ספורט. הוא עוצר ומרגיש את הלב דופק בחוזקה.",a:"body",
+  why:"השרירים עבדו קשה וצריכים יותר חמצן, אז הלב מזרים יותר דם. זה בדיוק מה שלב בריא עושה.",
+  tip:"ללכת לאט, לשתות מים, ולתת ללב כמה דקות להירגע.",think:"איך הייתם יודעים שזה מהריצה ולא מפחד?"},
+ {n:"מאיה",c:"#e8546b",s:"הלב דופק מהר",zone:"chest",t:"המורה אומרת: \"מאיה, בואי תציגי את העבודה מול כל הכיתה\". מאיה רק קמה מהכיסא, והלב שלה כבר דופק בחוזקה.",a:"emo",
+  why:"מאיה לא רצה בכלל. המוח זיהה \"מצב מלחיץ\" והפעיל את מנגנון ההגנה: הלב מאיץ כאילו צריך לברוח. אין סכנה אמיתית, אבל הגוף מגיב כאילו יש.",
+  tip:"להניח יד על הלב, לנשום לאט ולהגיד לעצמי: \"זה רק לחץ, הוא יעבור. אני יכולה\".",think:"התחושה הזאת יכולה להיות גם התרגשות. איך מבדילים?"},
+ {n:"עומר",c:"#0f9b8e",s:"כאב ראש",zone:"head",t:"היה יום חם במיוחד. עומר שיחק כדורגל בכל ההפסקות ושכח את בקבוק המים בבית. בשיעור האחרון כואב לו הראש.",a:"body",
+  why:"חום, מאמץ ובלי מים. הגוף מסמן: \"חסרים לי נוזלים\". כאב ראש הוא אחד הסימנים הראשונים להתייבשות.",
+  tip:"לשתות מים, לשבת בצל ולנוח. כדאי תמיד לקחת בקבוק לבית הספר.",think:"מה עוד גופני יכול לגרום לכאב ראש? (רמז: שינה, אוכל)"},
+ {n:"שירה",c:"#7b5cd6",s:"כאב ראש וכתפיים תפוסות",zone:"head",t:"שירה רבה עם החברה הכי טובה שלה. אחר כך היא ישבה שעה שלמה כפופה מעל הטלפון, כיווצה את הכתפיים וחשבה על הריב שוב ושוב.",a:"both",
+  why:"גם וגם! הרגש (עצב וכעס) גרם לה לכווץ את השרירים בלי לשים לב, והישיבה הכפופה הוסיפה. רגש וגוף משפיעים אחד על השני.",
+  tip:"לקום, למתוח את הכתפיים למעלה ולשחרר למטה 3 פעמים. ואחר כך לחשוב: עם מי אפשר לדבר על הריב?",think:"מה שירה אומרת לעצמה כשהיא חושבת על הריב שוב ושוב?"},
+ {n:"יואב",c:"#e8546b",s:"פנים חמות ואדומות",zone:"face",t:"יואב מעד במסדרון והתיק נפל לו. כמה ילדים צחקו. הוא מרגיש שהפנים שלו בוערות.",a:"emo",
+  why:"זו מבוכה. כשאנחנו נבוכים, כלי הדם בפנים מתרחבים והלחיים מאדימות. זה קורה לכולם, גם למבוגרים.",
+  tip:"לזכור שזה עובר תוך דקה-שתיים. אפשר לחייך, להגיד \"קורה\" ולהמשיך.",think:"מה הייתם אומרים לחבר שזה קרה לו?"},
+ {n:"תמר",c:"#e8546b",s:"פרפרים בבטן",zone:"stomach",t:"מחר יוצאים לטיול השנתי שתמר חיכתה לו כל השנה. בלילה היא שוכבת במיטה ומרגישה פרפרים מתעופפים לה בבטן.",a:"emo",
+  why:"התרגשות! לא רק רגשות קשים מורגשים בגוף, גם שמחה וציפייה. מעניין שהתחושה של התרגשות דומה מאוד לתחושה של לחץ.",
+  tip:"אם קשה להירדם: לסרוק את הגוף מכפות הרגליים עד הראש ולשחרר כל חלק.",think:"איפה בגוף אתם מרגישים שמחה?"},
+ {n:"אורי",c:"#0f9b8e",s:"עייפות וגוף כבד",zone:"whole",t:"אורי שיחק במחשב עד שתיים בלילה. בבוקר בכיתה הוא מרגיש שהגוף כבד ובקושי מחזיק את העיניים פתוחות.",a:"body",
+  why:"ילדים בגיל הזה צריכים 9 עד 11 שעות שינה. הגוף מסמן: \"לא נתת לי לנוח\".",
+  tip:"הלילה ללכת לישון מוקדם, ולהניח את המסך בצד שעה לפני השינה.",think:"מה עוד קורה לכם כשאתם לא ישנים מספיק? (מצב רוח, ריכוז)"},
+ {n:"ליה",c:"#e8546b",s:"עייפות וגוף כבד",zone:"whole",t:"לפני שבוע הכלב של ליה מת. מאז, גם אחרי לילה של שינה, הגוף שלה מרגיש כבד ואין לה כוח לשום דבר.",a:"emo",
+  why:"עצב יכול להרגיש בגוף כמו עייפות וכבדות. היא ישנה מספיק, אבל הלב שלה עצוב. זה טבעי אחרי אובדן.",
+  tip:"לא להישאר לבד עם העצב: לספר להורה או לחבר, לצייר או לכתוב על הכלב, לצאת קצת החוצה.",think:"אם העצב נמשך הרבה זמן ולא עובר, למי כדאי לספר?"},
+ {n:"נדב",c:"#7b5cd6",s:"ידיים רועדות ומזיעות",zone:"hands",t:"עוד רגע מתחיל משחק הגמר בכדורסל, ונדב מאוד רוצה לנצח. בגלל האימון הוא גם דילג על ארוחת הצהריים. הידיים שלו רועדות ומזיעות.",a:"both",
+  why:"גם וגם! הלחץ לפני המשחק מזיע ומרעיד את הידיים, ורעב (סוכר נמוך בדם) גם גורם לרעד. שני הסימנים מצטרפים.",
+  tip:"לאכול משהו קטן, כמו בננה, ולנשום נשימת בלון. ולהזכיר לעצמו: \"התאמנתי, אני מוכן\".",think:"איך נדב יכול לבדוק מה מהשניים משפיע יותר?"},
+ {n:"רוני",c:"#e8546b",s:"לחץ בחזה ונשימה קצרה",zone:"chest",t:"ההורים של רוני מתווכחים בקול רם בסלון. רוני בחדר שלו ומרגיש לחץ בחזה, כאילו קשה לנשום עמוק.",a:"emo",
+  why:"פחד ודאגה גורמים לנשימה להיות מהירה ושטחית, ואז מרגישים לחץ בחזה. הגוף נכנס למצב \"כוננות\".",
+  tip:"נשימת 4-4: לשאוף 4 שניות, לנשוף 4 שניות. ואחר כך לספר למבוגר שסומכים עליו מה הרגשתי.",think:"חשוב: אם יש כאב בחזה בלי סיבה ברורה, תמיד מספרים למבוגר."},
+ {n:"גיא",c:"#e8546b",s:"אגרופים קפוצים וחום בגוף",zone:"hands",t:"באמצע המשחק בהפסקה מישהו חטף לגיא את הכדור וברח. גיא מרגיש חום עולה בגוף והידיים שלו נקפצות לאגרופים.",a:"emo",
+  why:"זה כעס. הגוף מתכונן \"להילחם\": השרירים מתכווצים והחום עולה. התחושה הזאת היא סימן שכדאי לעצור לפני שעושים משהו.",
+  tip:"לעצור, לספור לאט עד 10, לפתוח את האגרופים ולנער את הידיים. ורק אז להחליט מה לעשות.",think:"מה גיא יכול להגיד במקום להרביץ?"},
+ {n:"אלה",c:"#e8546b",s:"גוש בגרון",zone:"throat",t:"אלה שמעה שהחברה הכי טובה שלה עוברת לגור בעיר אחרת. היא מרגישה כאילו יש לה גוש תקוע בגרון.",a:"emo",
+  why:"זו תחושה שמגיעה כשרוצים לבכות ומנסים להחזיק את הדמעות. השרירים בגרון מתכווצים.",
+  tip:"מותר לבכות, זה משחרר. אפשר גם לשתות מים לאט ולספר למישהו מה מרגישים.",think:"למה לפעמים אנחנו מנסים להחזיק את הבכי?"},
+ {n:"עידו",c:"#0f9b8e",s:"כאב בטן",zone:"stomach",t:"בארוחת הצהריים עידו אכל שתי מנות פיצה ועוד גלידה ענקית, הכל מהר מאוד. עכשיו הבטן שלו כואבת ומלאה.",a:"body",
+  why:"אכל הרבה ומהר. הקיבה מתמלאת יותר מדי, והגוף מסמן: \"די, אני מלא\".",
+  tip:"לנוח, לא לרוץ מיד אחרי אוכל, ובפעם הבאה לאכול לאט ולהקשיב לגוף מתי מספיק.",think:"איך מרגישים בגוף שכבר שבעים?"},
+];
+const ZONES={head:[100,46,"ראש"],face:[100,52,"פנים"],throat:[100,92,"גרון"],chest:[100,135,"חזה"],stomach:[100,185,"בטן"],hands:[34,232,"ידיים"],whole:[100,180,"כל הגוף"]};
+const LABEL={body:"גוף",emo:"רגש",both:"גם וגם"};
+const ROUNDS=10;
+
+function bodySVG(zone){
+  let g="";
+  if(zone){
+    const [x,y]=ZONES[zone];
+    if(zone==="whole") g=`<rect x="20" y="5" width="160" height="350" rx="60" class="glow" style="animation-name:none;opacity:.22"/>`;
+    else if(zone==="hands") g=`<circle cx="34" cy="232" r="22" class="glow"/><circle cx="166" cy="232" r="22" class="glow"/>`;
+    else g=`<circle cx="${x}" cy="${y}" r="22" class="glow"/>`;
+  }
+  return `<g fill="var(--skin)" stroke="var(--skin-line)" stroke-width="3" stroke-linejoin="round">
+    <path d="M62 112 Q100 100 138 112 L160 218 Q164 232 152 236 L138 150 L136 230 L132 345 L108 345 L102 248 L98 248 L92 345 L68 345 L64 230 L62 150 L48 236 Q36 232 40 218 Z"/>
+    <circle cx="100" cy="50" r="36"/>
+    <rect x="90" y="84" width="20" height="22" rx="6"/>
+    <circle cx="34" cy="232" r="11"/><circle cx="166" cy="232" r="11"/>
+  </g>
+  <circle cx="88" cy="48" r="3.5" fill="var(--ink)"/><circle cx="112" cy="48" r="3.5" fill="var(--ink)"/>
+  <path d="M90 64 Q100 71 110 64" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+  ${g}`;
+}
+document.getElementById("heroBody").innerHTML=bodySVG("stomach");
+
+const $=id=>document.getElementById(id);
+let S={deck:[],i:0,teams:false,score:[0,0],turn:0,answered:false};
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function makeDeck(){
+  // keep matching pairs (same sensation, different cause) together so kids see the contrast
+  const pairs=[[0,1],[2,3],[8,9]], used=new Set(pairs.flat());
+  let units=pairs.map(p=>p.map(i=>CARDS[i]));
+  CARDS.forEach((c,i)=>{if(!used.has(i))units.push([c])});
+  return shuffle(units).flat().slice(0,ROUNDS);
+}
+function show(id){["start","game","end"].forEach(s=>$(s).hidden=s!==id)}
+function renderScores(){
+  const el=$("scores"); el.hidden=false;
+  el.innerHTML = S.teams
+    ? ["קבוצה כתומה","קבוצה כחולה"].map((n,k)=>`<div class="score ${k===S.turn?'active':''}">${n} <b>${S.score[k]}</b></div>`).join("")
+    : `<div class="score">נקודות <b>${S.score[0]}</b></div>`;
+  $("progress").textContent=`קלף ${Math.min(S.i+1,S.deck.length)} מתוך ${S.deck.length}`;
+}
+function start(teams){
+  S={deck:makeDeck(),i:0,teams,score:[0,0],turn:0,answered:false};
+  show("game"); renderCard();
+}
+function renderCard(){
+  const c=S.deck[S.i]; S.answered=false;
+  $("avatar").textContent=c.n[0]; $("avatar").style.background=c.c;
+  $("name").textContent=c.n;
+  $("turn").textContent=S.teams?`התור של ${S.turn?"הקבוצה הכחולה":"הקבוצה הכתומה"}`:"כל הכיתה מתייעצת";
+  $("sensation").textContent=c.s;
+  $("story").textContent=c.t;
+  $("bodyMap").innerHTML=bodySVG(c.zone);
+  $("mapLabel").textContent=ZONES[c.zone][2];
+  document.querySelectorAll(".choice").forEach(b=>{b.disabled=false;b.classList.remove("right","picked")});
+  $("reveal").hidden=true;
+  renderScores();
+  $("card").scrollIntoView({block:"nearest"});
+}
+function answer(a){
+  if(S.answered) return; S.answered=true;
+  const c=S.deck[S.i], ok=a===c.a;
+  if(ok) S.score[S.teams?S.turn:0]+=10;
+  document.querySelectorAll(".choice").forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.a===c.a) b.classList.add("right");
+    else if(b.dataset.a===a) b.classList.add("picked");
+  });
+  const last=S.i===S.deck.length-1;
+  const r=$("reveal"); r.className="reveal "+c.a; r.hidden=false;
+  r.innerHTML=`<div class="verdict">${ok?"נכון! +10":"כמעט!"} התשובה: ${LABEL[c.a]}</div>
+    <p>${c.why}</p>
+    <div class="tip"><div class="ic">!</div><div><b>מה אפשר לעשות?</b>${c.tip}</div></div>
+    <p class="think">שאלה לדיון: ${c.think}</p>
+    <div class="nextrow"><button class="big" id="next">${last?"לסיום המשחק":"לקלף הבא"}</button></div>`;
+  renderScores();
+  $("next").onclick=next; $("next").focus({preventScroll:true});
+  r.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function next(){
+  S.i++; if(S.teams) S.turn=1-S.turn;
+  if(S.i>=S.deck.length) return finish();
+  renderCard();
+}
+function finish(){
+  show("end"); renderScores(); $("progress").textContent="";
+  if(S.teams){
+    const [a,b]=S.score;
+    $("endTitle").textContent=a===b?"תיקו! שתי הקבוצות בלשיות מעולות":(a>b?"הקבוצה הכתומה ניצחה!":"הקבוצה הכחולה ניצחה!");
+    $("endScore").textContent=`כתומה: ${a} נקודות · כחולה: ${b} נקודות`;
+  } else {
+    $("endTitle").textContent="כל הכבוד, בלשים!";
+    $("endScore").textContent=`צברתם ${S.score[0]} נקודות מתוך ${S.deck.length*10}.`;
+  }
+}
+$("playSolo").onclick=()=>start(false);
+$("playTeams").onclick=()=>start(true);
+$("again").onclick=()=>{show("start");$("scores").hidden=true;$("progress").textContent=""};
+document.querySelectorAll(".choice").forEach(b=>b.onclick=()=>answer(b.dataset.a));
+</script>

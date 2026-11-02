@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>מסע בלשי הגוף</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Suez+One&family=Assistant:wght@400;600;800&display=swap">
+<style>
+/* Layout: a night-time "detective world" game. HUD bar on top, one screen at a time (map, case, shop, badges). Single committed dark look. */
+:root{
+  color-scheme:dark;
+  --bg:#1f1d4a; --bg2:#2a2763; --panel:#34307a; --line:#4b46a0; --ink:#fdfbff; --muted:#c3bfee;
+  --sun:#ffc93c; --coin:#ffb703; --mint:#3ddbc0; --pink:#ff6f91; --violet:#b69cff; --sky:#5ec8ff;
+  --good:#3ddbc0; --bad:#ff6f91;
+  --skin:#ffd6b0; --skin-line:#b9835c; --dark:#1f1d4a;
+  --display:"Suez One","Assistant",Arial,sans-serif;
+  --text:"Assistant",Arial,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:radial-gradient(circle at 20% 0%,var(--bg2),var(--bg) 60%) fixed;background-color:var(--bg);color:var(--ink);
+  font-family:var(--text);font-size:18px;line-height:1.5;direction:rtl;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;line-height:1.2;text-wrap:balance}
+p{margin:0}
+button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.btn{background:var(--sun);color:var(--dark);font-weight:800;border-radius:16px;padding:12px 24px;font-size:1.1rem;box-shadow:0 5px 0 #c98f00;transition:transform .1s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #c98f00}
+.btn.ghost{background:var(--panel);color:var(--ink);box-shadow:0 5px 0 #201d58}
+.btn:disabled{opacity:.45;cursor:default}
+.panel{background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:20px}
+
+/* HUD */
+.hud{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--bg2);border:2px solid var(--line);border-radius:20px;padding:10px 14px}
+.hud .av{width:56px;height:56px;flex:none}
+.who{flex:1;min-width:150px}
+.who b{font-size:1.1rem;display:block;line-height:1.1}
+.rank{color:var(--sun);font-weight:800;font-size:.95rem}
+.xpbar{height:12px;background:var(--dark);border-radius:99px;overflow:hidden;margin-top:4px}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--mint),var(--sky));border-radius:99px;transition:width .6s}
+.xptxt{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.pill{display:flex;align-items:center;gap:6px;background:var(--dark);border-radius:99px;padding:6px 12px;font-weight:800;font-variant-numeric:tabular-nums}
+.coin{width:20px;height:20px;border-radius:50%;background:var(--coin);border:3px solid #e08e00;display:inline-block;flex:none}
+.hudbtns{display:flex;gap:8px}
+.iconbtn{background:var(--panel);border-radius:14px;padding:8px 12px;font-weight:800;font-size:.95rem;border:2px solid var(--line)}
+.screen[hidden]{display:none!important}
+
+/* setup */
+.setup{display:grid;gap:18px;text-align:center;justify-items:center}
+.setup h1{font-size:clamp(2rem,6vw,3.2rem);color:var(--sun)}
+.setup p{max-width:52ch;color:var(--muted)}
+.setup input{font:inherit;font-size:1.2rem;padding:10px 16px;border-radius:14px;border:2px solid var(--line);background:var(--dark);color:var(--ink);text-align:center;width:min(320px,100%)}
+.colors{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.colors button{width:44px;height:44px;border-radius:50%;border:4px solid transparent}
+.colors button.on{border-color:var(--ink)}
+
+/* map */
+.maphead{display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap}
+.maphead h2{font-size:1.8rem}
+.maphead p{color:var(--muted)}
+.path{position:relative;display:flex;flex-direction:column;gap:14px;padding-block:6px}
+.path::before{content:"";position:absolute;inset-block:30px;inset-inline-start:50%;border-inline-start:4px dashed var(--line)}
+.station{position:relative;width:min(440px,100%);display:flex;gap:14px;align-items:center;text-align:start;background:var(--panel);border:3px solid var(--line);border-radius:22px;padding:14px 16px}
+.station:nth-child(odd){align-self:flex-start}
+.station:nth-child(even){align-self:flex-end}
+.station .num{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.6rem;color:var(--dark)}
+.station b{display:block;font-size:1.15rem}
+.station small{color:var(--muted);display:block}
+.stars{color:var(--line);letter-spacing:2px;font-size:1.2rem}
+.stars .on{color:var(--sun)}
+.station.locked{opacity:.5;cursor:not-allowed}
+.station.current{border-color:var(--sun);animation:bob 1.6s ease-in-out infinite}
+.station:not(.locked):hover{border-color:var(--sun)}
+@keyframes bob{50%{transform:translateY(-4px)}}
+
+/* play */
+.playtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.dots{display:flex;gap:6px}
+.dots i{width:14px;height:14px;border-radius:50%;background:var(--line)}
+.dots i.ok{background:var(--good)} .dots i.no{background:var(--bad)} .dots i.now{background:var(--sun)}
+.streak{font-weight:800;color:var(--sun)}
+.stage{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start}
+.mapbox{text-align:center;padding:12px}
+.mapbox svg{width:100%;max-width:170px;height:auto}
+.zone{font-family:var(--display);color:var(--pink);font-size:1.2rem}
+.case{display:flex;flex-direction:column;gap:14px;min-width:0}
+.char{display:flex;align-items:center;gap:12px}
+.char .ini{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.5rem;color:var(--dark);flex:none}
+.sens{font-family:var(--display);font-size:clamp(1.5rem,3.5vw,2.2rem);color:var(--sun)}
+.story{font-size:1.15rem}
+.q{font-weight:800;font-size:1.15rem}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ch{border-radius:16px;padding:14px 8px;font-weight:800;font-size:1.15rem;border:3px solid transparent;color:var(--dark);box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.ch.body{background:var(--mint)} .ch.emo{background:var(--pink)} .ch.both{background:var(--violet)}
+.ch:disabled{opacity:.35;cursor:default;box-shadow:none}
+.ch.right{opacity:1;border-color:var(--ink);transform:scale(1.04)}
+.ch.picked{opacity:.9;outline:3px dashed var(--ink);outline-offset:2px}
+.tools{display:grid;gap:8px}
+.tool{background:var(--dark);border:2px solid var(--line);border-radius:14px;padding:12px 14px;text-align:start;font-weight:600}
+.tool:hover:not(:disabled){border-color:var(--sun)}
+.tool:disabled{cursor:default;opacity:.5}
+.tool.good{opacity:1;border-color:var(--good);background:color-mix(in srgb,var(--good) 22%,var(--dark))}
+.tool.bad{opacity:1;border-color:var(--bad)}
+.fb{border-radius:16px;padding:14px 16px;background:var(--dark);display:grid;gap:8px;animation:pop .3s ease}
+.fb .v{font-family:var(--display);font-size:1.35rem}
+.fb .v.ok{color:var(--good)} .fb .v.no{color:var(--bad)}
+.gain{display:inline-flex;gap:10px;flex-wrap:wrap;font-weight:800}
+.gain span{background:var(--panel);border-radius:99px;padding:2px 10px}
+@keyframes pop{from{transform:scale(.95);opacity:.3}to{transform:none;opacity:1}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:.2}}
+.glow{fill:var(--pink);animation:pulse 1.3s ease-in-out infinite}
+
+/* results */
+.result{text-align:center;display:grid;gap:14px;justify-items:center}
+.result h2{font-size:clamp(2rem,6vw,3rem);color:var(--sun)}
+.bigstars{font-size:3.4rem;letter-spacing:6px;color:var(--line);line-height:1}
+.bigstars .on{color:var(--sun);display:inline-block;animation:starIn .5s backwards}
+.bigstars .on:nth-child(2){animation-delay:.25s}.bigstars .on:nth-child(3){animation-delay:.5s}
+@keyframes starIn{from{transform:scale(0) rotate(-90deg)}}
+.news{display:grid;gap:8px;width:min(460px,100%)}
+.news div{background:var(--dark);border-radius:14px;padding:10px 14px;font-weight:800}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+/* shop & badges */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.item{background:var(--dark);border:2px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.item svg{width:90px;height:90px}
+.item b{font-size:1.05rem}
+.item.on{border-color:var(--sun)}
+.item .btn{padding:8px 14px;font-size:.95rem;width:100%}
+.badge{background:var(--dark);border:2px solid var(--line);border-radius:18px;padding:14px;text-align:center;display:grid;gap:6px;justify-items:center}
+.badge .medal{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-size:1.7rem;color:var(--dark)}
+.badge.off{opacity:.4}
+.badge.off .medal{background:var(--line)!important;color:var(--muted)}
+.badge small{color:var(--muted)}
+.sechead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--sun);color:var(--dark);font-weight:800;padding:12px 20px;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:20;max-width:calc(100% - 32px);text-align:center}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:15;width:100%;height:100%}
+.small{font-size:.9rem;color:var(--muted)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+@media (max-width:700px){
+  .stage{grid-template-columns:1fr}
+  .mapbox{display:flex;align-items:center;gap:12px;padding:10px} .mapbox svg{max-width:70px}
+  .choices{grid-template-columns:1fr}
+  .path::before{display:none}
+  .station:nth-child(n){align-self:stretch}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<canvas id="fx"></canvas>
+<div class="wrap">
+  <header class="hud" id="hud" hidden>
+    <svg class="av" viewBox="0 0 120 120" id="hudAv" aria-hidden="true"></svg>
+    <div class="who">
+      <b id="hudName"></b>
+      <span class="rank" id="hudRank"></span>
+      <div class="xpbar"><i id="xpFill"></i></div>
+      <span class="xptxt" id="xpTxt"></span>
+    </div>
+    <div class="pill" title="מטבעות"><span class="coin"></span><span id="hudCoins">0</span></div>
+    <div class="hudbtns">
+      <button class="iconbtn" id="goMap">מפה</button>
+      <button class="iconbtn" id="goShop">חנות</button>
+      <button class="iconbtn" id="goBadges">תגים</button>
+      <button class="iconbtn" id="mute" aria-label="צליל">צליל: פועל</button>
+    </div>
+  </header>
+
+  <!-- SETUP -->
+  <section class="screen panel setup" id="setup" hidden>
+    <svg viewBox="0 0 120 120" width="140" height="140" id="setupAv" aria-hidden="true"></svg>
+    <h1>מסע בלשי הגוף</h1>
+    <p>הגוף שלנו שולח הודעות: לפעמים בגלל אוכל, שינה או מאמץ, ולפעמים בגלל רגשות. עברו חמש תחנות, פענחו תיקים, אספו מטבעות ותגים, ועלו בדרגה עד "מפענח/ת הגוף".</p>
+    <label for="nameIn" class="small">איך קוראים לבלש או לבלשית?</label>
+    <input id="nameIn" maxlength="16" placeholder="השם שלי" autocomplete="off">
+    <div class="colors" id="colors"></div>
+    <button class="btn" id="startBtn">יוצאים למסע</button>
+  </section>
+
+  <!-- MAP -->
+  <section class="screen" id="map" hidden>
+    <div class="maphead">
+      <div><h2>מפת המסע</h2><p>כל תחנה היא 4 תיקים. סיימו תחנה כדי לפתוח את הבאה.</p></div>
+    </div>
+    <div class="path" id="path"></div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" id="play" hidden>
+    <div class="playtop">
+      <h2 id="lvlName"></h2>
+      <div class="dots" id="dots"></div>
+      <span class="streak" id="streak"></span>
+    </div>
+    <div class="stage" style="margin-top:12px">
+      <div class="panel mapbox">
+        <svg viewBox="0 0 200 360" id="bodyMap" aria-hidden="true"></svg>
+        <div><div class="zone" id="zoneLbl"></div><div class="small">איפה זה מרגיש</div></div>
+      </div>
+      <article class="panel case" id="case"></article>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen panel result" id="result" hidden></section>
+
+  <!-- SHOP -->
+  <section class="screen" id="shop" hidden>
+    <div class="sechead"><h2>החנות של הבלש</h2><div class="pill"><span class="coin"></span><span id="shopCoins"></span></div></div>
+    <p class="small" style="margin:6px 0 14px">קנו ציוד עם המטבעות שצברתם ולבשו אותו על הדמות.</p>
+    <div class="grid" id="shopGrid"></div>
+  </section>
+
+  <!-- BADGES -->
+  <section class="screen" id="badges" hidden>
+    <div class="sechead"><h2>אוסף התגים</h2><span class="small" id="badgeCount"></span></div>
+    <div class="grid" id="badgeGrid" style="margin-top:14px"></div>
+    <div class="panel" style="margin-top:18px;display:grid;gap:10px">
+      <h3>להתחיל מחדש</h3>
+      <p class="small">מוחק את ההתקדמות במכשיר הזה (למשל כשילד אחר רוצה לשחק).</p>
+      <div class="confirm" id="resetBox"><button class="btn ghost" id="resetAsk">איפוס המשחק</button></div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ---------- content ---------- */
+const CARDS={
+ noa:{n:"נועה",s:"בחילה",zone:"stomach",a:"emo",t:"בבוקר של מבחן גדול במתמטיקה, נועה מרגישה בחילה. אתמול היא אכלה ארוחה רגילה וישנה טוב.",
+  why:"אכלה רגיל וישנה טוב, אבל יש מבחן. לחץ מפעיל את \"האזעקה\" של הגוף, והבטן מאוד רגישה לזה.",
+  tools:["נשימת בלון: לשאוף לאט ולמלא את הבטן, לנשוף לאט. 5 פעמים","לאכול עוד ארוחת בוקר גדולה כדי לסדר את הבטן","להגיד לעצמה: \"אני בטוח אכשל\""]},
+ itay:{n:"איתי",s:"בחילה",zone:"stomach",a:"body",t:"איתי אכל בהפסקה כריך טונה שנשאר כל הבוקר בתיק, בשמש. אחרי חצי שעה הבטן מתהפכת לו.",
+  why:"אותה תחושה כמו של נועה, סיבה אחרת! אוכל שלא נשמר בקירור יכול לקלקל את הבטן.",
+  tools:["לספר למבוגר ולשתות מים בלגימות קטנות","לעשות נשימות ולחכות שהלחץ יעבור","לאכול את החצי השני של הכריך"]},
+ tamar:{n:"תמר",s:"פרפרים בבטן",zone:"stomach",a:"emo",t:"מחר הטיול השנתי שתמר חיכתה לו כל השנה. בלילה במיטה היא מרגישה פרפרים בבטן.",
+  why:"התרגשות! גם רגשות נעימים מורגשים בגוף. מעניין שהתרגשות ולחץ מרגישים כמעט אותו דבר.",
+  tools:["לסרוק את הגוף מהרגליים עד הראש ולשחרר כל חלק","לקום ולאכול חטיף מתוק באמצע הלילה","לשחק בטלפון עד שתירדם"]},
+ ido:{n:"עידו",s:"כאב בטן",zone:"stomach",a:"body",t:"עידו אכל בצהריים שתי מנות פיצה ועוד גלידה ענקית, הכל מהר מאוד. עכשיו הבטן כואבת ומלאה.",
+  why:"אכל הרבה ומהר. הקיבה מלאה מדי והגוף מסמן: \"די, אני מלא\".",
+  tools:["לנוח, ובפעם הבאה לאכול לאט ולהקשיב לגוף","לרוץ מיד לשחק תופסת","לאכול עוד גלידה"]},
+ daniel:{n:"דניאל",s:"הלב דופק מהר",zone:"chest",a:"body",t:"דניאל רץ חמישה סיבובים מסביב למגרש בשיעור ספורט. הוא עוצר ומרגיש את הלב דופק בחוזקה.",
+  why:"השרירים עבדו קשה וצריכים יותר חמצן, אז הלב מזרים יותר דם. זה מה שלב בריא עושה.",
+  tools:["ללכת לאט ולשתות מים","להיבהל ולחשוב שמשהו לא בסדר בלב","לרוץ עוד חמישה סיבובים מהר יותר"]},
+ maya:{n:"מאיה",s:"הלב דופק מהר",zone:"chest",a:"emo",t:"המורה אומרת: \"מאיה, בואי תציגי מול הכיתה\". מאיה רק קמה מהכיסא, והלב כבר דופק בחוזקה.",
+  why:"מאיה לא רצה בכלל. המוח זיהה \"מצב מלחיץ\" והלב מאיץ כאילו צריך לברוח. אין סכנה אמיתית.",
+  tools:["יד על הלב, נשימה איטית, ולהגיד לעצמה: \"זה רק לחץ, אני יכולה\"","לברוח מהכיתה לשירותים","להגיד לעצמה: \"כולם יצחקו עליי\""]},
+ roni:{n:"רוני",s:"לחץ בחזה",zone:"chest",a:"emo",t:"ההורים של רוני מתווכחים בקול רם בסלון. רוני בחדר ומרגיש לחץ בחזה, כאילו קשה לנשום עמוק.",
+  why:"פחד ודאגה גורמים לנשימה מהירה ושטחית, ואז מרגישים לחץ בחזה. חשוב: כאב בחזה בלי סיבה ברורה תמיד מספרים למבוגר.",
+  tools:["נשימת 4-4, ואחר כך לספר למבוגר שסומכים עליו","להיכנס לסלון ולצעוק על ההורים","לשמור את זה בסוד לתמיד"]},
+ bar:{n:"בר",s:"הלב דופק מהר",zone:"chest",a:"body",t:"בר שתה שתי פחיות של משקה אנרגיה כדי \"להיות ערני\". עכשיו הלב דופק מהר והוא לא מצליח לשבת בשקט.",
+  why:"במשקאות אנרגיה יש הרבה קפאין וסוכר שמאיצים את הלב. הם לא מתאימים לילדים.",
+  tools:["לשתות מים ולוותר על משקאות אנרגיה","לשתות עוד פחית כדי להתרכז","להחליט שהוא בטח לחוץ ממשהו"]},
+ omer:{n:"עומר",s:"כאב ראש",zone:"head",a:"body",t:"יום חם במיוחד. עומר שיחק כדורגל בכל ההפסקות ושכח את בקבוק המים. בשיעור האחרון כואב לו הראש.",
+  why:"חום, מאמץ ובלי מים. הגוף מסמן: \"חסרים לי נוזלים\".",
+  tools:["לשתות מים ולנוח בצל","לשחק עוד משחק כדורגל בשמש","לחשוב שזה בטח משהו נורא"]},
+ shira:{n:"שירה",s:"כאב ראש וכתפיים תפוסות",zone:"head",a:"both",t:"שירה רבה עם החברה הכי טובה. אחר כך ישבה שעה כפופה מעל הטלפון, מכווצת כתפיים, וחשבה על הריב שוב ושוב.",
+  why:"גם וגם! העצב והכעס כיווצו את השרירים, והישיבה הכפופה הוסיפה. רגש וגוף משפיעים אחד על השני.",
+  tools:["למתוח את הכתפיים, ואחר כך לדבר עם מישהו על הריב","להמשיך לגלול ולחשוב על הריב שוב ושוב","לשבת עוד שעה באותה תנוחה"]},
+ hila:{n:"הילה",s:"סחרחורת",zone:"head",a:"body",t:"הילה מיהרה בבוקר ולא אכלה ארוחת בוקר. בשיעור השלישי הראש מסתובב לה והיא מרגישה חלשה.",
+  why:"המוח צריך אנרגיה מאוכל. בלי ארוחת בוקר הגוף מסמן: \"תדלקי אותי\".",
+  tools:["לאכול משהו קטן ולספר למורה","להמשיך בלי אוכל עד הערב","לקום ולרוץ בחצר"]},
+ ella:{n:"אלה",s:"גוש בגרון",zone:"throat",a:"emo",t:"אלה שמעה שהחברה הכי טובה שלה עוברת לגור בעיר אחרת. היא מרגישה גוש תקוע בגרון.",
+  why:"זו התחושה כשרוצים לבכות ומחזיקים את הדמעות. השרירים בגרון מתכווצים.",
+  tools:["מותר לבכות, ולספר לחברה מה מרגישים","לבלוע את הדמעות ולהעמיד פנים שהכל בסדר","להפסיק לדבר עם החברה כבר עכשיו"]},
+ yoav:{n:"יואב",s:"פנים חמות ואדומות",zone:"face",a:"emo",t:"יואב מעד במסדרון והתיק נפל. כמה ילדים צחקו, והוא מרגיש שהפנים שלו בוערות.",
+  why:"זו מבוכה. כלי הדם בפנים מתרחבים והלחיים מאדימות. זה קורה לכולם, וזה עובר.",
+  tools:["לחייך, להגיד \"קורה\" ולהמשיך ללכת","להחליט שהוא לא חוזר לבית הספר","לצעוק על הילדים שצחקו"]},
+ nadav:{n:"נדב",s:"ידיים רועדות ומזיעות",zone:"hands",a:"both",t:"עוד רגע משחק הגמר בכדורסל. נדב מאוד רוצה לנצח, ובגלל האימון גם דילג על ארוחת הצהריים. הידיים רועדות ומזיעות.",
+  why:"גם וגם! לחץ לפני המשחק מזיע ומרעיד, ורעב (סוכר נמוך) גם גורם לרעד.",
+  tools:["לאכול בננה ולנשום נשימת בלון","לא לאכול כדי להיות קל יותר","להגיד לעצמו: \"אני בטוח אפספס הכל\""]},
+ guy:{n:"גיא",s:"אגרופים קפוצים וחום בגוף",zone:"hands",a:"emo",t:"באמצע המשחק בהפסקה מישהו חטף לגיא את הכדור וברח. החום עולה והידיים נקפצות לאגרופים.",
+  why:"זה כעס. הגוף מתכונן \"להילחם\". התחושה הזאת היא סימן לעצור לפני שעושים משהו.",
+  tools:["לעצור, לספור לאט עד 10 ולפתוח את האגרופים","לרוץ אחרי הילד ולדחוף אותו","לשבור משהו כדי להוציא את הכעס"]},
+ yonatan:{n:"יונתן",s:"ידיים קרות ורועדות",zone:"hands",a:"both",t:"יונתן שר סולו בטקס שמתקיים בחצר, ביום חורף קר. רגע לפני שהוא עולה, הידיים שלו קרות ורועדות.",
+  why:"גם וגם! הקור מקרר את הידיים, וההתרגשות לפני הופעה גורמת לרעד.",
+  tools:["לשפשף ידיים, ללבוש סוודר ולנשום לאט","להגיד לעצמו: \"אני בטוח אזייף\"","לברוח מהטקס"]},
+ ori:{n:"אורי",s:"עייפות וגוף כבד",zone:"whole",a:"body",t:"אורי שיחק במחשב עד שתיים בלילה. בבוקר הגוף כבד והוא בקושי מחזיק את העיניים פתוחות.",
+  why:"ילדים בגיל הזה צריכים 9 עד 11 שעות שינה. הגוף מסמן: \"לא נתת לי לנוח\".",
+  tools:["ללכת לישון מוקדם ולהניח את המסך שעה לפני","לשתות משקה אנרגיה בבוקר","לשחק הלילה עד שלוש כדי להתרגל"]},
+ lia:{n:"ליה",s:"עייפות וגוף כבד",zone:"whole",a:"emo",t:"לפני שבוע הכלב של ליה מת. מאז, גם אחרי לילה של שינה, הגוף כבד ואין לה כוח לכלום.",
+  why:"עצב יכול להרגיש כמו עייפות. היא ישנה מספיק, אבל הלב עצוב. זה טבעי אחרי אובדן.",
+  tools:["לספר להורה או לחבר, ולצייר משהו על הכלב","להסתגר בחדר ולא לדבר עם אף אחד","להגיד לעצמה שאסור להיות עצובה"]},
+ adi:{n:"עדי",s:"כאב בטן",zone:"stomach",a:"emo",t:"לעדי כואבת הבטן בכל יום ראשון בבוקר לפני בית הספר. בשבת, בבית, הבטן בסדר גמור.",
+  why:"הבטן כואבת רק לפני בית ספר. זה יכול להיות סימן לדאגה. בלש טוב שואל: מה מטריד אותה שם?",
+  tools:["לספר להורים מה מדאיג אותה בבית הספר","להישאר בבית כל יום ראשון","לא לספר לאף אחד"]},
+ michal:{n:"מיכל",s:"רגליים כואבות",zone:"legs",a:"body",t:"אתמול מיכל הלכה 15 קילומטר בטיול. היום כואבות לה הרגליים כשהיא עולה במדרגות.",
+  why:"השרירים עבדו קשה. כאב שרירים אחרי מאמץ הוא נורמלי ועובר תוך כמה ימים.",
+  tools:["מתיחות עדינות, מקלחת חמה ומנוחה","לחשוב שבטוח משהו נשבר","לרוץ מרתון כדי להתרגל"]},
+};
+const LEVELS=[
+ {name:"תחנת הבטן",sub:"בחילות, כאבים ופרפרים",color:"var(--mint)",cards:["noa","itay","tamar","ido"]},
+ {name:"תחנת הלב",sub:"דפיקות ולחץ בחזה",color:"var(--pink)",cards:["daniel","maya","bar","roni"]},
+ {name:"תחנת הראש",sub:"כאבים, סחרחורת וגרון",color:"var(--sky)",cards:["omer","shira","hila","ella"]},
+ {name:"תחנת הידיים והפנים",sub:"רעד, זיעה, אגרופים",color:"var(--violet)",cards:["yoav","nadav","guy","yonatan"]},
+ {name:"התיק של הבלש הראשי",sub:"אתגר מעורבב",color:"var(--sun)",cards:["ori","lia","adi","michal"]},
+];
+const ZONES={head:[100,46,"ראש"],face:[100,54,"פנים"],throat:[100,95,"גרון"],chest:[100,135,"חזה"],stomach:[100,188,"בטן"],hands:[0,0,"ידיים"],whole:[0,0,"כל הגוף"],legs:[0,0,"רגליים"]};
+const LABEL={body:"גוף",emo:"רגש",both:"גם וגם"};
+const RANKS=[[0,"בלש/ית מתחיל/ה"],[60,"בלש/ית צעיר/ה"],[150,"בלש/ית מנוסה"],[250,"בלש/ית בכיר/ה"],[340,"מפענח/ת הגוף"]];
+const ITEMS=[
+ {id:"glasses",name:"משקפי בלש",slot:"face",price:30},
+ {id:"hat",name:"כובע בלשים",slot:"head",price:40},
+ {id:"pin",name:"סיכת כוכב",slot:"pin",price:40},
+ {id:"magnifier",name:"זכוכית מגדלת",slot:"hand",price:50},
+ {id:"phones",name:"אוזניות",slot:"head",price:60},
+ {id:"cape",name:"גלימת גיבור",slot:"back",price:80},
+ {id:"crown",name:"כתר זהב",slot:"head",price:150},
+];
+const BADGES=[
+ {id:"first",t:"צעד ראשון",d:"סיימו תחנה ראשונה",c:"var(--mint)",g:"1"},
+ {id:"s3",t:"רצף של 3",d:"3 תשובות נכונות ברצף",c:"var(--sky)",g:"3"},
+ {id:"s6",t:"רצף של 6",d:"6 תשובות נכונות ברצף",c:"var(--sky)",g:"6"},
+ {id:"perfect",t:"תחנה מושלמת",d:"3 כוכבים בתחנה",c:"var(--sun)",g:"★"},
+ {id:"both",t:"מומחה גם-וגם",d:"זיהוי נכון של 3 תיקי \"גם וגם\"",c:"var(--violet)",g:"+"},
+ {id:"emo",t:"בלש הרגשות",d:"8 רגשות שזוהו נכון",c:"var(--pink)",g:"♥"},
+ {id:"tools",t:"ארגז כלים",d:"10 בחירות של כלי מועיל",c:"var(--mint)",g:"✓"},
+ {id:"shop",t:"סטייל של בלש",d:"קנייה ראשונה בחנות",c:"var(--coin)",g:"$"},
+ {id:"all",t:"מפענח/ת הגוף",d:"סיימו את כל חמש התחנות",c:"var(--sun)",g:"♛"},
+];
+const COLORS=["#3ddbc0","#ff6f91","#5ec8ff","#b69cff","#ffb703","#7bd67b"];
+
+/* ---------- state ---------- */
+const KEY="body-quest-v1";
+function fresh(){return {name:"",color:COLORS[0],xp:0,coins:0,owned:[],eq:{},levels:{},badges:[],st:{emo:0,both:0,tools:0,best:0},mute:false}}
+let P=fresh();
+try{const raw=localStorage.getItem(KEY); if(raw) P=Object.assign(fresh(),JSON.parse(raw));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(P))}catch(e){}}
+
+/* ---------- art ---------- */
+function avatarSVG(color,eq){
+  eq=eq||{}; const has=s=>eq[s];
+  let back="",head="",face="",hand="",pin="";
+  if(has("back")) back=`<path d="M22 120 L36 78 Q60 70 84 78 L98 120 Z" fill="#e63946"/>`;
+  if(eq.head==="hat") head=`<path d="M30 40 Q60 6 90 40 Z" fill="#8a5a3b"/><rect x="22" y="36" width="76" height="9" rx="4" fill="#6b4329"/>`;
+  if(eq.head==="crown") head=`<path d="M36 34 L40 12 L52 26 L60 8 L68 26 L80 12 L84 34 Z" fill="#ffc93c" stroke="#d99a00" stroke-width="2"/>`;
+  if(eq.head==="phones") head=`<path d="M30 54 Q30 18 60 18 Q90 18 90 54" fill="none" stroke="#1f1d4a" stroke-width="6"/><rect x="22" y="46" width="14" height="22" rx="6" fill="#ff6f91"/><rect x="84" y="46" width="14" height="22" rx="6" fill="#ff6f91"/>`;
+  if(has("face")) face=`<g fill="none" stroke="#1f1d4a" stroke-width="3"><circle cx="49" cy="55" r="9"/><circle cx="71" cy="55" r="9"/><path d="M58 55h4"/></g>`;
+  if(has("hand")) hand=`<g><path d="M96 112 L110 126" stroke="#8a5a3b" stroke-width="7" stroke-linecap="round"/><circle cx="90" cy="104" r="12" fill="rgba(160,220,255,.5)" stroke="#ffc93c" stroke-width="4"/></g>`;
+  if(has("pin")) pin=`<path d="M60 92 l3.5 7 7.5 1 -5.5 5 1.5 7.5 -7-3.8 -7 3.8 1.5-7.5 -5.5-5 7.5-1z" fill="#ffc93c"/>`;
+  return `<circle cx="60" cy="60" r="58" fill="${color}" opacity=".35"/>${back}
+   <path d="M28 120 Q30 84 60 84 Q90 84 92 120 Z" fill="${color}"/>
+   <circle cx="60" cy="56" r="27" fill="var(--skin)" stroke="var(--skin-line)" stroke-width="2"/>
+   <circle cx="50" cy="55" r="3.2" fill="#1f1d4a"/><circle cx="70" cy="55" r="3.2" fill="#1f1d4a"/>
+   <path d="M51 67 Q60 74 69 67" fill="none" stroke="#1f1d4a" stroke-width="3" stroke-linecap="round"/>
+   ${face}${head}${pin}${hand}`;
+}
+function itemSVG(id){const eq={};const it=ITEMS.find(i=>i.id===id);eq[it.slot]=id;return avatarSVG("#5ec8ff",eq)}
+function bodySVG(zone){
+  let g="";
+  if(zone==="whole") g=`<rect x="22" y="8" width="156" height="346" rx="60" class="glow" opacity=".3"/>`;
+  else if(zone==="hands") g=`<circle cx="34" cy="232" r="22" class="glow"/><circle cx="166" cy="232" r="22" class="glow"/>`;
+  else if(zone==="legs") g=`<ellipse cx="80" cy="295" rx="20" ry="48" class="glow"/><ellipse cx="120" cy="295" rx="20" ry="48" class="glow"/>`;
+  else if(zone){const [x,y]=ZONES[zone];g=`<circle cx="${x}" cy="${y}" r="24" class="glow"/>`}
+  return `<g fill="var(--skin)" stroke="var(--skin-line)" stroke-width="3" stroke-linejoin="round">
+    <path d="M62 112 Q100 100 138 112 L160 218 Q164 232 152 236 L138 150 L136 230 L132 345 L108 345 L102 248 L98 248 L92 345 L68 345 L64 230 L62 150 L48 236 Q36 232 40 218 Z"/>
+    <circle cx="100" cy="50" r="36"/><rect x="90" y="84" width="20" height="22" rx="6"/>
+    <circle cx="34" cy="232" r="11"/><circle cx="166" cy="232" r="11"/></g>
+    <circle cx="88" cy="48" r="3.5" fill="#1f1d4a"/><circle cx="112" cy="48" r="3.5" fill="#1f1d4a"/>
+    <path d="M90 64 Q100 71 110 64" fill="none" stroke="#1f1d4a" stroke-width="3" stroke-linecap="round"/>${g}`;
+}
+
+/* ---------- sound ---------- */
+let AC=null;
+function beep(notes){
+  if(P.mute) return;
+  try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    let t=AC.currentTime;
+    notes.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type="triangle";o.frequency.value=f;
+      g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d);t+=d*.8;});
+  }catch(e){}
+}
+const SND={ok:[[660,.12],[880,.18]],no:[[300,.2],[220,.25]],coin:[[988,.08],[1319,.15]],win:[[523,.15],[659,.15],[784,.15],[1047,.35]]};
+
+/* ---------- confetti ---------- */
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv=document.getElementById("fx"),ctx=cv.getContext("2d");
+  cv.width=innerWidth;cv.height=innerHeight;
+  const cols=["#ffc93c","#3ddbc0","#ff6f91","#5ec8ff","#b69cff"];
+  const ps=Array.from({length:140},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:Math.random()*6.28,s:6+Math.random()*7,c:cols[Math.random()*5|0]}));
+  let f=0;(function tick(){ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.1;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);ctx.restore();});
+    if(++f<170) requestAnimationFrame(tick); else ctx.clearRect(0,0,cv.width,cv.height);})();
+}
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function rankOf(xp){let r=0;RANKS.forEach((x,i)=>{if(xp>=x[0])r=i});return r}
+let toastT;
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+function award(id,list){if(!P.badges.includes(id)){P.badges.push(id);const b=BADGES.find(x=>x.id===id);list&&list.push("תג חדש: "+b.t);toast("תג חדש: "+b.t);}}
+function show(id){["setup","map","play","result","shop","badges"].forEach(s=>$(s).hidden=s!==id);$("hud").hidden=id==="setup";window.scrollTo({top:0})}
+
+function renderHUD(){
+  $("hudAv").innerHTML=avatarSVG(P.color,P.eq);
+  $("hudName").textContent=P.name;
+  const r=rankOf(P.xp);$("hudRank").textContent=RANKS[r][1];
+  const lo=RANKS[r][0],hi=RANKS[r+1]?RANKS[r+1][0]:lo;
+  $("xpFill").style.width=(hi>lo?Math.min(100,(P.xp-lo)/(hi-lo)*100):100)+"%";
+  $("xpTxt").textContent=RANKS[r+1]?`${P.xp} נקודות ניסיון · עוד ${hi-P.xp} לדרגה הבאה`:`${P.xp} נקודות ניסיון · דרגה עליונה!`;
+  $("hudCoins").textContent=P.coins;
+  $("mute").textContent=P.mute?"צליל: כבוי":"צליל: פועל";
+}
+
+/* ---------- setup ---------- */
+function renderSetup(){
+  $("setupAv").innerHTML=avatarSVG(P.color,{});
+  $("colors").innerHTML=COLORS.map(c=>`<button style="background:${c}" class="${c===P.color?'on':''}" data-c="${c}" aria-label="צבע"></button>`).join("");
+  $("colors").querySelectorAll("button").forEach(b=>b.onclick=()=>{P.color=b.dataset.c;renderSetup()});
+}
+$("startBtn").onclick=()=>{P.name=$("nameIn").value.trim()||"בלש/ית";save();renderHUD();renderMap();show("map");beep(SND.ok)};
+
+/* ---------- map ---------- */
+function unlocked(i){return i===0||!!P.levels[i-1]}
+function renderMap(){
+  const cur=LEVELS.findIndex((l,i)=>unlocked(i)&&!P.levels[i]);
+  $("path").innerHTML=LEVELS.map((l,i)=>{
+    const st=P.levels[i]?P.levels[i].stars:0, lock=!unlocked(i);
+    const stars=[0,1,2].map(k=>`<span class="${k<st?'on':''}">★</span>`).join("");
+    return `<button class="station ${lock?'locked':''} ${i===cur?'current':''}" data-i="${i}" ${lock?'aria-disabled="true"':''}>
+      <span class="num" style="background:${l.color}">${lock?'🔒':i+1}</span>
+      <span><b>${l.name}</b><small>${lock?'נפתח אחרי התחנה הקודמת':l.sub}</small><span class="stars">${stars}</span></span></button>`;
+  }).join("");
+  $("path").querySelectorAll(".station").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i; if(!unlocked(i)){toast("קודם צריך לסיים את התחנה הקודמת");return}
+    startLevel(i);
+  });
+}
+
+/* ---------- play ---------- */
+let R=null;
+function startLevel(i){R={lvl:i,cards:shuffle(LEVELS[i].cards),k:0,results:[],streak:0,xp:0,coins:0,news:[]};show("play");renderCase();}
+function renderDots(){
+  $("dots").innerHTML=R.cards.map((_,k)=>`<i class="${k<R.results.length?(R.results[k]?'ok':'no'):(k===R.k?'now':'')}"></i>`).join("");
+  $("streak").textContent=R.streak>=2?`רצף ${R.streak}! בונוס`:"";
+}
+function renderCase(){
+  const L=LEVELS[R.lvl], c=CARDS[R.cards[R.k]];
+  $("lvlName").textContent=L.name; renderDots();
+  $("bodyMap").innerHTML=bodySVG(c.zone); $("zoneLbl").textContent=ZONES[c.zone][2];
+  $("case").innerHTML=`<div class="char"><div class="ini" style="background:${L.color}">${c.n[0]}</div><div><b>${c.n}</b><div class="small">תיק ${R.k+1} מתוך 4</div></div></div>
+    <div class="sens">${c.s}</div><p class="story">${c.t}</p>
+    <div class="q">מה הגוף מנסה לסמן?</div>
+    <div class="choices">${["body","emo","both"].map(a=>`<button class="ch ${a}" data-a="${a}">${LABEL[a]}</button>`).join("")}</div>
+    <div id="step2"></div>`;
+  document.querySelectorAll(".ch").forEach(b=>b.onclick=()=>answer(b.dataset.a));
+}
+function answer(a){
+  const c=CARDS[R.cards[R.k]], ok=a===c.a;
+  document.querySelectorAll(".ch").forEach(b=>{b.disabled=true;if(b.dataset.a===c.a)b.classList.add("right");else if(b.dataset.a===a)b.classList.add("picked")});
+  R.results.push(ok);
+  let gx=0,gc=0;
+  if(ok){R.streak++;gx=10+(R.streak>=2?5:0);gc=5;
+    if(c.a==="emo")P.st.emo++; if(c.a==="both")P.st.both++;
+    P.st.best=Math.max(P.st.best,R.streak);
+    if(R.streak>=3)award("s3",R.news); if(R.streak>=6||P.st.best>=6)award("s6",R.news);
+    if(P.st.both>=3)award("both",R.news); if(P.st.emo>=8)award("emo",R.news);
+    beep(SND.ok);
+  } else {R.streak=0;beep(SND.no)}
+  R.xp+=gx;R.coins+=gc;P.xp+=gx;P.coins+=gc;save();renderHUD();renderDots();
+  const opts=shuffle(c.tools.map((t,i)=>({t,good:i===0})));
+  $("step2").innerHTML=`<div class="fb"><div class="v ${ok?'ok':'no'}">${ok?'נכון!':'לא בדיוק.'} התשובה: ${LABEL[c.a]}</div>
+     <p>${c.why}</p>${ok?`<div class="gain"><span>+${gx} ניסיון</span><span>+${gc} מטבעות</span></div>`:''}</div>
+    <div class="q">שלב 2: מה הכי יעזור ל${c.n}?</div>
+    <div class="tools">${opts.map((o,i)=>`<button class="tool" data-g="${o.good?1:0}">${o.t}</button>`).join("")}</div><div id="step3"></div>`;
+  document.querySelectorAll(".tool").forEach(b=>b.onclick=()=>pickTool(b));
+  $("step2").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function pickTool(btn){
+  const good=btn.dataset.g==="1";
+  document.querySelectorAll(".tool").forEach(b=>{b.disabled=true;if(b.dataset.g==="1")b.classList.add("good");else if(b===btn)b.classList.add("bad")});
+  if(good){R.coins+=5;R.xp+=5;P.coins+=5;P.xp+=5;P.st.tools++;if(P.st.tools>=10)award("tools",R.news);beep(SND.coin)}
+  save();renderHUD();
+  const last=R.k===R.cards.length-1;
+  $("step3").innerHTML=`<div class="fb" style="margin-top:10px"><div class="v ${good?'ok':'no'}">${good?'בחירה מצוינת! +5 מטבעות':'הממ, זה פחות יעזור. הכלי המסומן בירוק עובד טוב יותר.'}</div>
+    <div><button class="btn" id="nextBtn">${last?'לסיום התחנה':'לתיק הבא'}</button></div></div>`;
+  $("nextBtn").onclick=()=>{if(last)finishLevel();else{R.k++;renderCase();window.scrollTo({top:0,behavior:"smooth"})}};
+  $("nextBtn").focus({preventScroll:true});
+  $("step3").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function finishLevel(){
+  const right=R.results.filter(Boolean).length;
+  const stars=right===4?3:right>=3?2:1;
+  const prev=P.levels[R.lvl]?P.levels[R.lvl].stars:0;
+  const bonus=stars*5; P.coins+=bonus; R.coins+=bonus;
+  const rankBefore=rankOf(P.xp-R.xp);
+  P.levels[R.lvl]={stars:Math.max(prev,stars)};
+  award("first",R.news); if(stars===3)award("perfect",R.news);
+  if(LEVELS.every((_,i)=>P.levels[i]))award("all",R.news);
+  const rankNow=rankOf(P.xp); if(rankNow>rankBefore) R.news.unshift("עליתם דרגה: "+RANKS[rankNow][1]+"!");
+  if(R.lvl<LEVELS.length-1&&!prev) R.news.push("נפתחה תחנה חדשה: "+LEVELS[R.lvl+1].name);
+  save();renderHUD();
+  const msg=stars===3?"מושלם!":stars===2?"עבודה טובה!":"סיימתם את התחנה!";
+  const isLast=LEVELS.every((_,i)=>P.levels[i])&&R.lvl===LEVELS.length-1;
+  $("result").innerHTML=`<h2>${isLast?'פיצחתם את כל התיקים!':msg}</h2>
+    <div class="bigstars">${[0,1,2].map(k=>`<span class="${k<stars?'on':''}">★</span>`).join("")}</div>
+    <p>${right} מתוך 4 תשובות נכונות</p>
+    <div class="gain" style="justify-content:center"><span>+${R.xp} ניסיון</span><span>+${R.coins} מטבעות (כולל ${bonus} בונוס כוכבים)</span></div>
+    ${R.news.length?`<div class="news">${R.news.map(n=>`<div>${n}</div>`).join("")}</div>`:''}
+    ${isLast?`<p class="small" style="max-width:52ch">זכרו את ארבע שאלות הבלש: מה אני מרגיש/ה בגוף? מה קרה לפני (אוכל, שינה, מאמץ)? איזה רגש יש לי? מה אני חושב/ת? וכשתחושה חזקה או חוזרת, מספרים למבוגר.</p>`:''}
+    <div class="row"><button class="btn" id="toMap">חזרה למפה</button><button class="btn ghost" id="toShop">לחנות</button>${stars<3?'<button class="btn ghost" id="retry">לנסות שוב ל-3 כוכבים</button>':''}</div>`;
+  show("result");beep(SND.win);confetti();
+  $("toMap").onclick=()=>{renderMap();show("map")};
+  $("toShop").onclick=()=>{renderShop();show("shop")};
+  if($("retry"))$("retry").onclick=()=>startLevel(R.lvl);
+}
+
+/* ---------- shop ---------- */
+function renderShop(){
+  $("shopCoins").textContent=P.coins;
+  $("shopGrid").innerHTML=ITEMS.map(it=>{
+    const own=P.owned.includes(it.id), on=P.eq[it.slot]===it.id;
+    const btn=own?`<button class="btn ${on?'ghost':''}" data-eq="${it.id}">${on?'להוריד':'ללבוש'}</button>`
+                 :`<button class="btn" data-buy="${it.id}" ${P.coins<it.price?'disabled':''}>לקנות ב-${it.price}</button>`;
+    return `<div class="item ${on?'on':''}"><svg viewBox="0 0 120 120" aria-hidden="true">${itemSVG(it.id)}</svg><b>${it.name}</b>
+      <span class="small">${own?'שלך':`<span class="coin" style="width:14px;height:14px;border-width:2px;vertical-align:-2px"></span> ${it.price}`}</span>${btn}</div>`;
+  }).join("");
+  $("shopGrid").querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>{
+    const it=ITEMS.find(x=>x.id===b.dataset.buy); if(P.coins<it.price)return;
+    P.coins-=it.price;P.owned.push(it.id);P.eq[it.slot]=it.id;award("shop");beep(SND.coin);save();renderHUD();renderShop();toast("קניתם "+it.name+"!");
+  });
+  $("shopGrid").querySelectorAll("[data-eq]").forEach(b=>b.onclick=()=>{
+    const it=ITEMS.find(x=>x.id===b.dataset.eq); if(P.eq[it.slot]===it.id)delete P.eq[it.slot];else P.eq[it.slot]=it.id;save();renderHUD();renderShop();
+  });
+}
+
+/* ---------- badges ---------- */
+function renderBadges(){
+  $("badgeCount").textContent=`${P.badges.length} מתוך ${BADGES.length}`;
+  $("badgeGrid").innerHTML=BADGES.map(b=>`<div class="badge ${P.badges.includes(b.id)?'':'off'}"><div class="medal" style="background:${b.c}">${b.g}</div><b>${b.t}</b><small>${b.d}</small></div>`).join("");
+  $("resetBox").innerHTML=`<button class="btn ghost" id="resetAsk">איפוס המשחק</button>`;
+  $("resetAsk").onclick=()=>{
+    $("resetBox").innerHTML=`<span>בטוחים? כל ההתקדמות תימחק.</span><button class="btn" id="resetYes">כן, לאפס</button><button class="btn ghost" id="resetNo">ביטול</button>`;
+    $("resetYes").onclick=()=>{P=fresh();save();$("nameIn").value="";renderSetup();show("setup")};
+    $("resetNo").onclick=renderBadges;
+  };
+}
+
+/* ---------- nav ---------- */
+$("goMap").onclick=()=>{renderMap();show("map")};
+$("goShop").onclick=()=>{renderShop();show("shop")};
+$("goBadges").onclick=()=>{renderBadges();show("badges")};
+$("mute").onclick=()=>{P.mute=!P.mute;save();renderHUD()};
+
+if(P.name){renderHUD();renderMap();show("map")} else {renderSetup();show("setup")}
+</script>
