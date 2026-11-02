@@ -1074,9 +1074,10 @@ function startBonus(){
   BZ={tension:100,t0:performance.now(),dur:60000,last:0,bubs:[],good:[],bad:0,over:false};
   requestAnimationFrame(loopBonus);
 }
+let RDECK=[];function nextRel(){if(!RDECK.length)RDECK=shuffle(RELEASE.slice());return RDECK.pop()}
 function spawn(){
   const A=$("arena"),bad=Math.random()<.32;
-  const pool=bad?HURT:RELEASE,it=pool[Math.random()*pool.length|0],txt=it[1];
+  const pool=bad?HURT:RELEASE,it=bad?pool[Math.random()*pool.length|0]:nextRel(),txt=it[1];
   const el=document.createElement("button");el.className="bub";el.innerHTML=`<span class="bi" aria-hidden="true">${it[0]}</span>${txt}`;
   const w=A.clientWidth,n=w<520?2:3,lw=w/n;
   const free=[...Array(n).keys()].filter(l=>!BZ.bubs.some(b=>b.lane===l&&!b.done&&b.y<150));
