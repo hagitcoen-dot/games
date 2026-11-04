@@ -243,6 +243,24 @@ body.tnight{background:radial-gradient(circle at 30% 20%,#4a2f8a,#160c33 70%)}
 .instbox ol{margin:4px 0 0;padding-inline-start:20px}
 .instbox p{font-weight:700;color:#3a2a4d}
 .ik{display:inline-block;background:#eee;border-radius:6px;padding:0 4px}
+/* fun fx */
+.flt{position:fixed;z-index:60;transform:translate(-50%,0);font-weight:900;font-size:1.6rem;color:#ffcc29;-webkit-text-stroke:1.5px #2a1b3d;pointer-events:none;animation:flt 1.2s ease-out forwards}
+@keyframes flt{0%{opacity:0;transform:translate(-50%,0) scale(.6)}15%{opacity:1;transform:translate(-50%,-14px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-90px) scale(1)}}
+.spk{position:fixed;z-index:59;font-style:normal;color:#ffd54a;font-size:1.2rem;pointer-events:none;text-shadow:0 0 6px #fff3a0;animation:spk .75s ease-out forwards}
+@keyframes spk{from{transform:translate(-50%,-50%) scale(1);opacity:1}to{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.3) rotate(160deg);opacity:0}}
+.combo{position:fixed;z-index:61;top:38%;left:50%;transform:translate(-50%,-50%);font-weight:900;font-size:clamp(2rem,7vw,3.4rem);color:#fff;background:linear-gradient(180deg,#ff9a3c,#ff4f5e);border:5px solid #2a1b3d;border-radius:22px;padding:8px 26px;box-shadow:0 8px 0 #2a1b3d;pointer-events:none;animation:cmb 1.4s ease-out forwards}
+@keyframes cmb{0%{transform:translate(-50%,-50%) scale(.2) rotate(-12deg);opacity:0}20%{transform:translate(-50%,-50%) scale(1.15) rotate(3deg);opacity:1}35%{transform:translate(-50%,-50%) scale(1) rotate(0)}80%{opacity:1}100%{transform:translate(-50%,-80%) scale(.9);opacity:0}}
+.shake{animation:shk .45s}
+@keyframes shk{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.case{position:relative}
+.case.cin{animation:cin .5s cubic-bezier(.2,1.3,.4,1)}
+@keyframes cin{from{transform:translateX(-60px) rotate(-3deg);opacity:0}to{transform:none;opacity:1}}
+.stampx{position:absolute;top:14px;inset-inline-end:14px;font-weight:900;font-size:1.3rem;color:#d93a2b;border:4px solid #d93a2b;border-radius:10px;padding:2px 12px;background:rgba(255,250,240,.85);transform:rotate(-12deg);pointer-events:none;animation:stmp .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes stmp{from{transform:rotate(-12deg) scale(2.6);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:.92}}
+.say{font:inherit;font-size:1.1rem;vertical-align:middle;background:#fff;border:2px solid #c9b48a;border-radius:999px;width:40px;height:40px;cursor:pointer;margin-inline-start:6px}
+.say.on{background:#ffcc29;animation:pulse 1s infinite}
+button.btn:active,.ch:active,.tool:active{transform:scale(.95)}
+@media (prefers-reduced-motion: reduce){.flt,.combo,.case.cin,.stampx,.shake{animation:none}}
 /* treasure ceremony */
 .tre{position:relative;overflow:hidden;border:4px solid var(--out);border-radius:28px;box-shadow:0 7px 0 var(--out);color:#fff;
   background:radial-gradient(ellipse at 50% 30%,#4a2f8a,#24154a 70%);padding:22px 18px 26px;display:grid;gap:18px;justify-items:center;text-align:center}
@@ -342,6 +360,7 @@ body.tnight{background:radial-gradient(circle at 30% 20%,#4a2f8a,#160c33 70%)}
     <div class="chipx" title="מפתחות"><span class="ic">🗝️</span><span id="keys">0/5</span></div>
     <button class="snd" id="newBtn" title="משחק חדש" aria-label="משחק חדש">↺</button>
     <button class="snd" id="trainBtn" title="אימון: מה זו תחושה?" aria-label="אימון">?</button>
+    <button class="snd" id="musicBtn" aria-label="מוזיקה" title="מוזיקה">🎵</button>
     <button class="snd" id="mute" aria-label="צליל">🔊</button>
   </header>
 
@@ -707,8 +726,38 @@ function islandSVG(){
 
 /* sound + fx */
 let AC=null;
-function beep(n){if(P.mute)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();let t=AC.currentTime;
-  n.forEach(([f,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type="square";o.frequency.value=f;g.gain.setValueAtTime(.07,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d);t+=d*.85})}catch(e){}}
+function ac(){AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();return AC}
+function note(f,t,d,vol=.09,type="triangle"){const o=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain();o.type=type;o2.type="sine";o.frequency.value=f;o2.frequency.value=f*2;
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  const g2=AC.createGain();g2.gain.value=.25;o.connect(g);o2.connect(g2).connect(g);g.connect(AC.destination);o.start(t);o2.start(t);o.stop(t+d+.02);o2.stop(t+d+.02)}
+function beep(n,vol){if(P.mute)return;try{ac();let t=AC.currentTime;n.forEach(([f,d])=>{note(f,t,d*1.4,vol);t+=d*.85})}catch(e){}}
+function whoosh(){if(P.mute)return;try{ac();const t=AC.currentTime,len=.35,b=AC.createBuffer(1,AC.sampleRate*len,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
+  const s=AC.createBufferSource(),fl=AC.createBiquadFilter(),g=AC.createGain();s.buffer=b;fl.type="bandpass";fl.Q.value=1.2;fl.frequency.setValueAtTime(400,t);fl.frequency.exponentialRampToValueAtTime(2400,t+len);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.12,t+.08);g.gain.exponentialRampToValueAtTime(.0001,t+len);s.connect(fl).connect(g).connect(AC.destination);s.start(t)}catch(e){}}
+function tick(){if(P.mute)return;try{ac();note(1400,AC.currentTime,.05,.035,"sine")}catch(e){}}
+function stamp(){if(P.mute)return;try{ac();const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(50,t+.18);
+  g.gain.setValueAtTime(.35,t);g.gain.exponentialRampToValueAtTime(.0001,t+.22);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+.25)}catch(e){}}
+/* background music: soft island loop on title and map */
+let MUS=null;const MSCREENS=["title","map","done","intro"];
+function music(){const want=!P.mute&&P.music!==false&&MSCREENS.includes(window.__scr);
+  if(want&&!MUS){try{ac()}catch(e){return}const mg=AC.createGain();mg.gain.value=.0001;mg.connect(AC.destination);mg.gain.exponentialRampToValueAtTime(.5,AC.currentTime+1.2);
+    const mel=[0,4,7,9,7,4,2,4, 0,2,4,7,9,12,9,7],bass=[0,0,-5,-5,-3,-3,-5,-5],root=262,beat=.32;let step=0,nt=AC.currentTime+.1;
+    const sch=setInterval(()=>{while(nt<AC.currentTime+.6){const m=mel[step%16];if(step%16!==7&&step%16!==15)note(root*Math.pow(2,m/12),nt,beat*1.3,.035,"triangle");
+      if(step%2===0){const b=bass[(step/2|0)%8];const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.value=root/2*Math.pow(2,b/12);g.gain.setValueAtTime(.0001,nt);g.gain.exponentialRampToValueAtTime(.06,nt+.02);g.gain.exponentialRampToValueAtTime(.0001,nt+beat*1.8);o.connect(g).connect(mg);o.start(nt);o.stop(nt+beat*2)}
+      step++;nt+=beat}},120);
+    MUS={mg,sch}}
+  else if(!want&&MUS){const m=MUS;MUS=null;try{m.mg.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+.4)}catch(e){}setTimeout(()=>{clearInterval(m.sch);try{m.mg.disconnect()}catch(e){}},450)}}
+/* floating reward text + sparkles */
+function floatTxt(el,txt,col){if(!el)return;const r=el.getBoundingClientRect(),d=document.createElement("div");d.className="flt";d.textContent=txt;d.style.left=(r.left+r.width/2)+"px";d.style.top=(r.top)+"px";if(col)d.style.color=col;document.body.appendChild(d);setTimeout(()=>d.remove(),1300)}
+function sparkle(el){if(!el||matchMedia("(prefers-reduced-motion: reduce)").matches)return;const r=el.getBoundingClientRect();for(let i=0;i<12;i++){const s=document.createElement("i");s.className="spk";s.textContent=["✦","★","✧"][i%3];
+  const a=Math.PI*2*i/12,dist=50+Math.random()*40;s.style.left=(r.left+r.width/2)+"px";s.style.top=(r.top+r.height/2)+"px";s.style.setProperty("--dx",Math.cos(a)*dist+"px");s.style.setProperty("--dy",Math.sin(a)*dist+"px");document.body.appendChild(s);setTimeout(()=>s.remove(),800)}}
+function comboBanner(n){const d=document.createElement("div");d.className="combo";d.innerHTML=`🔥 רצף של ${n}!`;document.body.appendChild(d);setTimeout(()=>d.remove(),1500);
+  if(!P.mute)try{ac();let t=AC.currentTime;[0,4,7,12].forEach((s,i)=>note(523*Math.pow(2,(s+n*2)/12),t+i*.07,.2,.08))}catch(e){}}
+/* read aloud (helps kids who struggle with reading) */
+function say(txt,btn){if(!("speechSynthesis" in window))return;const S=speechSynthesis;if(S.speaking){S.cancel();if(btn)btn.classList.remove("on");return}
+  const u=new SpeechSynthesisUtterance(txt);u.lang="he-IL";u.rate=.9;const v=S.getVoices().find(v=>/^he|^iw/i.test(v.lang));if(v)u.voice=v;
+  if(btn){btn.classList.add("on");u.onend=u.onerror=()=>btn.classList.remove("on")}S.speak(u)}
+document.addEventListener("pointerdown",e=>{if(e.target.closest("button"))tick()},true);
 const SND={ok:[[660,.1],[990,.16]],no:[[260,.18],[196,.25]],gem:[[1175,.07],[1568,.14]],win:[[523,.12],[659,.12],[784,.12],[1047,.3]],chest:[[392,.12],[523,.12],[659,.12],[784,.12],[1047,.12],[1319,.4]]};
 function confetti(n=150){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const cv=document.getElementById("fx"),ctx=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;
@@ -722,12 +771,12 @@ const $=id=>document.getElementById(id);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const rankOf=xp=>{let r=0;RANKS.forEach((x,i)=>{if(xp>=x[0])r=i});return r};
 let tt;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
-function show(id){["title","intro","map","play","done","treasure","bonus"].forEach(s=>$(s).hidden=s!==id);$("hud").hidden=id==="title";document.body.classList.toggle("cabin",id==="play");document.body.classList.toggle("tnight",id==="title");window.scrollTo({top:0})}
+function show(id){if(window.__scr!==id&&window.__scr)whoosh();window.__scr=id;setTimeout(music,0);if("speechSynthesis" in window)speechSynthesis.cancel();["title","intro","map","play","done","treasure","bonus"].forEach(s=>$(s).hidden=s!==id);$("hud").hidden=id==="title";document.body.classList.toggle("cabin",id==="play");document.body.classList.toggle("tnight",id==="title");window.scrollTo({top:0})}
 function hud(){
   $("hudTok").innerHTML=token(P.crew);$("hudName").textContent=P.name;
   const r=rankOf(P.xp),lo=RANKS[r][0],hi=RANKS[r+1]?RANKS[r+1][0]:lo;
   $("hudRank").textContent="דרגה: "+RANKS[r][1];$("xpFill").style.width=(hi>lo?(P.xp-lo)/(hi-lo)*100:100)+"%";
-  $("gems").textContent=P.gems;$("keys").textContent=keysN()+"/5";$("mute").textContent=P.mute?"🔇":"🔊";
+  $("gems").textContent=P.gems;$("keys").textContent=keysN()+"/5";$("mute").textContent=P.mute?"🔇":"🔊";$("musicBtn").style.opacity=(P.music===false||P.mute)?".45":"1";
 }
 
 /* title */
@@ -861,19 +910,22 @@ function renderCase(){
   const parts=c.t.split(/(?<=[.!?]) /),last=parts.pop();
   $("case").innerHTML=`<div class="clip" aria-hidden="true"></div>
    <div class="ctag">🔍 הרמז: ${c.s}</div>
-   <h3 class="ctitle">תיק החקירה של ${c.n}</h3>
+   <h3 class="ctitle">תיק החקירה של ${c.n} <button class="say" id="sayBtn" type="button" aria-label="הקראת הסיפור" title="הקראה">🔈</button></h3>
    <div class="crow"><div class="ctext"><p class="cstory">${parts.join(" ")}</p><p class="cstory"><b>${last}</b></p>
    <div class="cgo">🔎 בואו נחקור את הרמזים</div></div>${CIMG[R.cards[R.k]]?`<img class="cimg" src="${CIMG[R.cards[R.k]]}" alt="">`:''}</div>`;
   $("ask").innerHTML=`<div class="q fqq">לפי הרמזים בסיפור, למה התחושה כנראה קשורה?</div>
    <div class="choices">${["body","emo","both"].map(a=>`<button class="ch ${a}" data-a="${a}">${CICON[a]}<span class="chl">${LABEL[a]}</span><span class="chs">${SUB[a]}</span></button>`).join("")}</div><div id="s2"></div>`;
   document.querySelectorAll(".ch").forEach(b=>b.onclick=()=>answer(b.dataset.a));
   $("hintTxt").hidden=true;
+  const sb=$("sayBtn");if(!("speechSynthesis" in window))sb.hidden=true;else sb.onclick=()=>say(c.t,sb);
+  const cs=$("case");cs.classList.remove("cin");void cs.offsetWidth;cs.classList.add("cin");
 }
 function answer(a){
   const c=CARDS[R.cards[R.k]],ok=a===c.a;
   document.querySelectorAll(".ch").forEach(b=>{b.disabled=true;if(b.dataset.a===c.a)b.classList.add("right");else if(b.dataset.a===a)b.classList.add("picked")});
   R.res.push(ok);let g=0,x=0;
   if(ok){R.combo++;g=R.combo>=2?2:1;x=10+(R.combo>=2?5:0);beep(SND.ok)}else{R.combo=0;beep(SND.no)}
+  {const pb=document.querySelector(`.ch[data-a="${a}"]`);if(ok){sparkle(pb);floatTxt(pb,`+${g} 💎`);if(R.combo>=2)setTimeout(()=>comboBanner(R.combo),350)}else{pb.classList.add("shake")}}
   R.gems+=g;R.xp+=x;P.gems+=g;P.xp+=x;save();hud();dots();
   const opts=shuffle(c.tools.map((t,i)=>({t,good:i<2})));
   $("s2").innerHTML=`<div class="fb"><div class="v ${ok?'ok':'no'}">${ok?'יפה! הרמזים מובילים ל: ':'גם זו אפשרות, אבל הרמזים בסיפור מובילים יותר ל: '}${LABEL[c.a]}</div><p>${c.why}</p><p style="font-weight:900;color:var(--purple)">שאלה לכיתה: איזה רמז בסיפור עזר לכם לבחור?</p>
@@ -888,8 +940,9 @@ const BADWHY={"aviv": "כשהגוף מסמן שצריך שירותים, מותר
 function tool(btn){
   const good=btn.dataset.g==="1";
   document.querySelectorAll(".tool").forEach(b=>{b.disabled=true;if(b.dataset.g==="1")b.classList.add("good");else if(b===btn)b.classList.add("bad")});
-  if(good){R.gems++;R.xp+=5;P.gems++;P.xp+=5;beep(SND.gem)}save();hud();
+  if(good){R.gems++;R.xp+=5;P.gems++;P.xp+=5;beep(SND.gem);sparkle(btn);floatTxt(btn,"+1 💎")}else btn.classList.add("shake");save();hud();
   const last=R.k===3;
+  setTimeout(()=>{const cs=$("case");if(!cs.querySelector(".stampx")){const s=document.createElement("div");s.className="stampx";s.textContent="✔ התיק נפתר";cs.appendChild(s);stamp()}},500);
   $("s3").innerHTML=`<div class="fb" style="margin-top:10px"><div class="v ${good?'ok':'no'}">${good?(c2().q2?'בחירה טובה! +1 💎':'זו דרך שיכולה לעזור! +1 💎'):'זה פחות מתאים עכשיו.'}</div>${!good&&BADWHY[R.cards[R.k]]?`<p style="font-weight:700">💡 למה? ${BADWHY[R.cards[R.k]]}</p>`:''}<p>${c2().q2?"יש כאן יותר מתשובה טובה אחת (מסומנות בירוק). מה הייתם בוחרים אתם?":"יש כאן יותר מדרך אחת שיכולה לעזור (מסומנות בירוק). לכל אחד עוזרים דברים אחרים. מה הייתם בוחרים אתם?"}</p>
    <div><button class="btn" id="nx">${last?'לסיום האזור':'לתיק הבא ◀'}</button></div></div>`;
   $("nx").onclick=()=>{if(last)finish();else{R.k++;renderCase();window.scrollTo({top:0,behavior:"smooth"})}};
@@ -1136,7 +1189,8 @@ function askNew(){
 $("newBtn").onclick=askNew;
 $("backMap").onclick=()=>{renderMap();show("map")};
 $("hintBtn").onclick=()=>{const h=$("hintTxt");h.textContent="רמז של בלש: מה קרה לפני שהתחושה התחילה? אכלו, שתו, ישנו או התאמצו? או שקרה משהו מרגש, מלחיץ, מכעיס או עצוב? ואולי גם וגם?";h.hidden=!h.hidden;beep([[880,.06]])};
-$("mute").onclick=()=>{P.mute=!P.mute;save();hud()};
+$("mute").onclick=()=>{P.mute=!P.mute;save();hud();music()};
+$("musicBtn").onclick=()=>{P.music=P.music===false;save();hud();music()};
 if(P.name&&P.intro){hud();renderMap();show("map")}else if(P.name){hud();startIntro()}else{renderTitle();show("title")}
 </script>
 
